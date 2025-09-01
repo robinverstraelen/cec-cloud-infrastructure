@@ -1,0 +1,5 @@
+outputs.json
+outputs_decrypted.json
+.terraform
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
