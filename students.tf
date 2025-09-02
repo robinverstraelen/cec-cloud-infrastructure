@@ -13,6 +13,35 @@ resource "random_password" "student_password" {
   special = true
 }
 
+# Internet Gateway for public internet access
+resource "aws_internet_gateway" "student_igw" {
+  vpc_id = aws_vpc.student_vpc.id
+
+  tags = {
+    Name = "student-igw"
+  }
+}
+
+# Route Table for the VPC
+resource "aws_route_table" "student_rt" {
+  vpc_id = aws_vpc.student_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.student_igw.id
+  }
+
+  tags = {
+    Name = "student-rt"
+  }
+}
+
+# Associate the Route Table with the Subnet
+resource "aws_route_table_association" "student_rta" {
+  subnet_id      = aws_subnet.student_subnet.id
+  route_table_id = aws_route_table.student_rt.id
+}
+
 resource "aws_vpc" "student_vpc" {
   cidr_block = "10.0.0.0/16"
   enable_dns_support   = true
@@ -73,18 +102,25 @@ resource "aws_instance" "lab_vm" {
   ami           = "ami-0b016d1e12e0375a8"
   instance_type = "t3a.small"
   hibernation = true
-  associate_public_ip_address = true
+  associate_public_ip_address = false
   key_name      = aws_key_pair.student_key[count.index].key_name
   vpc_security_group_ids = [aws_security_group.ssh_access.id]
   root_block_device {
     volume_type = "gp3"
-    volume_size = 30
+    volume_size = 20
     encrypted   = true    # enable encryption required for hibernation
   }
   tags = {
     Name  = "student-lab-${count.index + 1}"
     Owner = aws_iam_user.student[count.index].name
   }
+}
+
+resource "aws_eip" "student_eip" {
+  count    = var.instance_count_student
+  instance = aws_instance.lab_vm[count.index].id
+  domain   = "vpc"  # Use 'domain' instead of 'vpc' for newer Terraform AWS provider versions; fallback to 'vpc = true' if needed
+  depends_on = [aws_instance.lab_vm]  # Ensures instances exist before assigning EIPs
 }
 
 # IAM user setup omitted here for brevity; use previous code section for full permissions
@@ -159,11 +195,6 @@ resource "aws_iam_user_policy_attachment" "attach_change_password" {
   count      = var.instance_count_student
   user       = aws_iam_user.student[count.index].name
   policy_arn = aws_iam_policy.allow_change_password.arn
-}
-
-resource "aws_iam_access_key" "student" {
-  count   = var.instance_count_student
-  user    = aws_iam_user.student[count.index].name
 }
 
 output "lab_vm_access_info" {
