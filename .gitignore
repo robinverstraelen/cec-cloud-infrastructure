@@ -3,3 +3,4 @@ outputs_decrypted.json
 .terraform
 .terraform.lock.hcl
 .terraform.tfstate.lock.info
+students_access_info.txt
