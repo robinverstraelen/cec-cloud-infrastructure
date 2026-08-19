@@ -1,6 +1,9 @@
 import json
 
-def format_student_info(data, url="https://sue-aws-student-01.signin.aws.amazon.com/console"):
+CONSOLE_URL = "https://sue-aws-student-01.signin.aws.amazon.com/console"
+
+
+def format_student_info(data, url=CONSOLE_URL):
     output = []
     for student in data:
         formatted = f"""
@@ -14,19 +17,26 @@ SSH Private Key: "{student['ssh_private_key']}"
         output.append(formatted)
     return "\n".join(output)
 
-# Read the JSON file
-with open('outputs_decrypted.json', 'r') as file:
+
+# Read the terraform outputs (terraform output -json > outputs.json)
+with open('outputs.json', 'r') as file:
     json_data = json.load(file)
 
-# Extract the value array
 students = json_data['lab_vm_access_info']['value']
+groups = json_data['group_vm_access_info']['value']
 
-# Generate the formatted output
 formatted_output = format_student_info(students)
-
-# Print or save the output
 print(formatted_output)
 
-# Optionally, save to a file
 with open('students_access_info.txt', 'w') as outfile:
     outfile.write(formatted_output)
+
+with open('group_credentials.json', 'w') as outfile:
+    json.dump(
+        [{**g, "aws_console_url": CONSOLE_URL} for g in groups],
+        outfile,
+        indent=2,
+    )
+
+print(f"Wrote {len(students)} students to students_access_info.txt "
+      f"and {len(groups)} groups to group_credentials.json")
