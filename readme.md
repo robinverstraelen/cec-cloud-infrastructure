@@ -20,7 +20,7 @@ terraform init
 terraform plan
 terraform apply
 terraform output -json > outputs.json
-python3 format.py   # -> students_access_info.txt + group_credentials.json
+python3 format.py   # -> student_credentials.json + group_credentials.json
 ```
 
 The generated credential files are gitignored — never commit them.
