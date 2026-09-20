@@ -9,7 +9,7 @@ variable "aws_profile" {
 
 variable "student_count" {
   description = "Number of individual student VMs"
-  default     = 50
+  default     = 60
 }
 
 variable "group_count" {

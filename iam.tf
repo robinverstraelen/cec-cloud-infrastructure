@@ -6,7 +6,7 @@ resource "aws_iam_user" "vm" {
 resource "aws_iam_user_login_profile" "vm" {
   for_each                = local.vms
   user                    = aws_iam_user.vm[each.key].name
-  password_reset_required = true
+  password_reset_required = false
 }
 
 resource "aws_iam_policy" "vm_control" {
